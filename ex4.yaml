@@ -7,10 +7,6 @@ on:
   push:
     branches: [ "AWS-Infrastructure" ]
 
-permissions:
-  id-token: write
-  contents: read
-
 jobs:
   increase-jar-patch:
     runs-on: self-hosted
@@ -25,7 +21,8 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::930698106164:role/GitHub-role
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-central-1
 
       - name: Login to Amazon ECR
