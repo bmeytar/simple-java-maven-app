@@ -1,0 +1,51 @@
+name: Run on self hosted GitHub Actions runner and Push to ECR
+
+env:
+  VERSION: 1.0.${{ github.run_number }}
+
+on: 
+  push:
+    branches: [ "AWS-Infrastructure" ]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  increase-jar-patch:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Increase version
+        run: mvn versions:set -DnewVersion=${{ env.VERSION }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::930698106164:role/GitHub-role
+          aws-region: eu-central-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push Docker image to ECR
+        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.login-ecr.outputs.registry }}/java:${{ env.VERSION }}
+
+      - name: Deploy
+        run: |
+          docker rm -f java || true
+          docker run --name java ${{ steps.login-ecr.outputs.registry }}/java:${{ env.VERSION }}
+
+      - name: Verify
+        run: |
+          docker logs java
+          docker inspect java --format='{{.State.ExitCode}}'

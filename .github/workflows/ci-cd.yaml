@@ -40,3 +40,6 @@ jobs:
           push: true
           tags: bmeytar/github:${{ env.VERSION }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Deploy
+        run: docker run --name java bmeytar/github:${{ env.VERSION }}
