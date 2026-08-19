@@ -46,3 +46,4 @@ jobs:
         run: |
           docker logs java
           docker inspect java --format='{{.State.ExitCode}}'
+          
